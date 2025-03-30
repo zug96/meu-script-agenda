@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
 import numpy as np
+import argparse
+import sys # Importar sys se ainda não estiver globalmente main()
 import sys # Para usar sys.exit()
 
 # --- Configurações ---
 CSV_FILENAME = 'agenda_data.csv'
-EXCEL_FILENAME = 'agenda_semana_31mar_05abr_refatorada.xlsx' # Novo nome
 SHEET_NAME = 'AgendaSemanal'
 
 # --- Funções ---
@@ -183,33 +184,79 @@ def salvar_planilha(writer):
         print(f"Erro ao salvar o arquivo Excel: {e}")
 
 # --- Função Principal ---
+# Mantenha os imports e as definições de constantes/outras funções iguais
+
 def main():
     """Função principal que orquestra a criação da planilha."""
     print("--- Iniciando Geração da Agenda ---")
+
+    # --- Configuração do Argparse ---
+    parser = argparse.ArgumentParser(description='Gera uma planilha Excel formatada da agenda semanal a partir de um CSV.')
+    parser.add_argument('-o', '--output',
+                        default='agenda_semana_formatada.xlsx', # Nome padrão
+                        help='Nome do arquivo Excel de saída (ex: minha_agenda.xlsx)')
+    parser.add_argument('-c', '--csv',
+                        default='agenda_data.csv', # Nome padrão do CSV
+                        help='Nome do arquivo CSV de entrada (ex: dados.csv)')
+    args = parser.parse_args()
+
+    # Usa os nomes de arquivo dos argumentos
+    csv_input_filename = args.csv
+    excel_output_filename = args.output
+    # --------------------------------
+
     # Carregar dados
-    df_agenda = carregar_dados(CSV_FILENAME)
+    df_agenda = carregar_dados(csv_input_filename) # Usa o nome do CSV do argumento
 
-    # Criar o 'escritor' Excel
-    excel_writer = pd.ExcelWriter(EXCEL_FILENAME, engine='xlsxwriter')
+    # Criar e usar o 'escritor' Excel com 'with' para garantir fechamento
+    try:
+        with pd.ExcelWriter(excel_output_filename, engine='xlsxwriter') as excel_writer:
+            print(f"Escrevendo dados na planilha '{SHEET_NAME}'...")
+            # Escrever DataFrame no Excel (isto cria a planilha com nome SHEET_NAME)
+            df_agenda.to_excel(excel_writer, index=False, sheet_name=SHEET_NAME, startrow=1, header=False)
 
-    # Escrever DataFrame no Excel (sem formato ainda, só estrutura)
-    # Escrevemos a partir da linha 1 (índice 0 é cabeçalho) sem o cabeçalho do pandas
-    df_agenda.to_excel(excel_writer, index=False, sheet_name=SHEET_NAME, startrow=1, header=False)
+            # Obter objetos workbook e worksheet para formatação
+            workbook = excel_writer.book
 
-    # Obter objetos workbook e worksheet para formatação
-    workbook = excel_writer.book
-    worksheet = excel_writer.sheets[SHEET_NAME]
+            # --- CORREÇÃO APLICADA AQUI ---
+            # Em vez de usar excel_writer.sheets[SHEET_NAME], pegamos a primeira planilha da lista do workbook.
+            # Isso é mais robusto caso o dicionário 'sheets' não esteja populado imediatamente.
+            worksheets_list = workbook.worksheets()
+            if worksheets_list:
+                worksheet = worksheets_list[0]
+                print(f"Planilha '{worksheet.name}' obtida para formatação.") # Verifica o nome obtido
+            else:
+                # Se df.to_excel falhou em criar a planilha (improvável sem erro anterior)
+                print(f"Erro Crítico: Nenhuma planilha foi encontrada no workbook após a escrita inicial.")
+                sys.exit(1)
+            # --- FIM DA CORREÇÃO ---
 
-    # Configurar os formatos
-    formatos = configurar_formatos(workbook)
+            # Configurar os formatos
+            formatos = configurar_formatos(workbook)
 
-    # Aplicar formatação e escrever os dados formatados
-    aplicar_formatacao_e_escrever_dados(worksheet, workbook, df_agenda, formatos)
+            # Aplicar formatação e escrever os dados formatados
+            aplicar_formatacao_e_escrever_dados(worksheet, workbook, df_agenda, formatos)
 
-    # Salvar o arquivo
-    salvar_planilha(excel_writer)
-    print(f"--- Geração da Agenda Concluída: '{EXCEL_FILENAME}' ---")
+            # O 'with' cuida do save/close automaticamente ao sair do bloco
+            print("Arquivo Excel sendo finalizado...")
+
+        print(f"--- Geração da Agenda Concluída: '{excel_output_filename}' ---") # Mostra o nome usado
+
+    except PermissionError as e:
+         print(f"Erro de Permissão ao tentar escrever '{excel_output_filename}': {e}")
+         print("Verifique se o arquivo não está aberto no Excel e se você tem permissão de escrita na pasta.")
+         sys.exit(1)
+    except KeyError as e:
+         print(f"Erro Inesperado de Chave: {e}. A planilha '{SHEET_NAME}' não foi encontrada como esperado.")
+         sys.exit(1)
+    except Exception as e:
+        print(f"Ocorreu um erro inesperado durante a escrita do Excel: {e}")
+        sys.exit(1)
 
 # --- Ponto de Entrada do Script ---
 if __name__ == "__main__":
-    main()
+    # Imports necessários AQUI DENTRO se não estiverem no topo global
+    import argparse
+    import sys
+    # Chama a função principal para iniciar o processo
+    main()   
