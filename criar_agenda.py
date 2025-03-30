@@ -1,6 +1,7 @@
 import pandas as pd
+import numpy as np # Necessário para verificar NaNs ao mesclar
 
-# Dados da agenda
+# Dados da agenda (mesmos dados)
 data = [
     # Segunda-feira, 31/03
     {'Dia': 'Segunda (31/03)', 'Horário': '06:45 - 07:15', 'Atividade': 'Caminhada com pai/cachorras', 'Observações': 'Ajustada (30 min). Conversar com pai.'},
@@ -61,51 +62,94 @@ data = [
 df = pd.DataFrame(data)
 
 # Nome do arquivo Excel
-excel_filename = 'agenda_semana_31mar_05abr_formatada.xlsx' # 
+excel_filename = 'agenda_semana_31mar_05abr_detalhada.xlsx' # Novo nome
 
-# Criar um Excel writer usando XlsxWriter como engine.
+# Criar um Excel writer usando XlsxWriter
 writer = pd.ExcelWriter(excel_filename, engine='xlsxwriter')
+df.to_excel(writer, index=False, sheet_name='AgendaSemanal', startrow=1, header=False) # Escreve os dados a partir da linha 2, sem cabeçalho do pandas
 
-# Converter o dataframe para um objeto XlsxWriter Excel.
-# index=False para não escrever o índice do dataframe no Excel.
-# sheet_name para nomear a aba da planilha.
-df.to_excel(writer, index=False, sheet_name='AgendaSemanal')
-
-# Obter os objetos workbook e worksheet do XlsxWriter.
+# Obter os objetos workbook e worksheet
 workbook  = writer.book
 worksheet = writer.sheets['AgendaSemanal']
 
-# --- Início da Formatação ---
+# --- Definir Formatos ---
 
-# Definir formato para o cabeçalho (Negrito)
+# Formato do Cabeçalho
 header_format = workbook.add_format({
-    'bold': True,
-    'text_wrap': True,
-    'valign': 'top', # Alinhamento vertical no topo
-    'fg_color': '#D7E4BC', # Uma cor de fundo suave para o cabeçalho
-    'border': 1})
+    'bold': True, 'text_wrap': True, 'valign': 'top',
+    'fg_color': '#D7E4BC', 'border': 1, 'align': 'center'
+})
 
-# Definir formato para as células de dados (Quebra de texto)
-cell_format = workbook.add_format({'text_wrap': True, 'valign': 'top'})
+# Formatos de Célula Base (com borda e quebra de texto)
+cell_format_base = workbook.add_format({'border': 1, 'text_wrap': True, 'valign': 'top'})
+cell_format_dia_hora = workbook.add_format({'border': 1, 'text_wrap': True, 'valign': 'top', 'align': 'center'}) # Centralizado para Dia/Hora
 
-# Aplicar o formato de cabeçalho
+# Formatos de Cores por Atividade (adicione ou ajuste cores/palavras-chave)
+color_formats = {
+    'Estudo Linux': workbook.add_format({'bg_color': '#FFFFCC', 'border': 1, 'text_wrap': True, 'valign': 'top'}), # Amarelo claro
+    'AULA PEDAGOGIA': workbook.add_format({'bg_color': '#CCFFFF', 'border': 1, 'text_wrap': True, 'valign': 'top'}), # Azul claro
+    'Estágio': workbook.add_format({'bg_color': '#CCFFFF', 'border': 1, 'text_wrap': True, 'valign': 'top'}), # Azul claro
+    'VÔLEI': workbook.add_format({'bg_color': '#CCFFCC', 'border': 1, 'text_wrap': True, 'valign': 'top'}), # Verde claro
+    'Caminhada': workbook.add_format({'bg_color': '#CCFFCC', 'border': 1, 'text_wrap': True, 'valign': 'top'}), # Verde claro
+    'Afazeres': workbook.add_format({'bg_color': '#FFDDCC', 'border': 1, 'text_wrap': True, 'valign': 'top'}), # Laranja claro
+    'Flexível': workbook.add_format({'bg_color': '#E0E0E0', 'border': 1, 'text_wrap': True, 'valign': 'top'}), # Cinza claro (Sábado)
+    'Tempo Livre': workbook.add_format({'bg_color': '#F0F0F0', 'border': 1, 'text_wrap': True, 'valign': 'top'}), # Cinza bem claro
+    'Descanso': workbook.add_format({'bg_color': '#F0F0F0', 'border': 1, 'text_wrap': True, 'valign': 'top'}), # Cinza bem claro
+}
+
+# --- Aplicar Formatação e Cores ---
+
+# Escrever o cabeçalho com o formato definido
 for col_num, value in enumerate(df.columns.values):
     worksheet.write(0, col_num, value, header_format)
 
-# Definir a largura das colunas (ajuste conforme necessário)
-# Formato: worksheet.set_column('ColunaInicial:ColunaFinal', Largura)
-worksheet.set_column('A:A', 18, cell_format) # Coluna Dia
-worksheet.set_column('B:B', 15, cell_format) # Coluna Horário
-worksheet.set_column('C:C', 40, cell_format) # Coluna Atividade (mais larga)
-worksheet.set_column('D:D', 50, cell_format) # Coluna Observações (mais larga)
+# Aplicar formato e cores às células de dados
+for row_num in range(len(df)):
+    # Identificar a cor baseada na atividade (case-insensitive)
+    activity_text = str(df.iloc[row_num, 2]).lower() # Coluna 'Atividade' é a índice 2
+    chosen_format = cell_format_base # Formato padrão
+    for keyword, fmt in color_formats.items():
+        if keyword.lower() in activity_text:
+            chosen_format = fmt
+            break # Usa o primeiro formato encontrado
 
-# (Opcional) Poderia adicionar mais formatações aqui:
-# - Cores diferentes para tipos de atividade (condicional formatting)
-# - Congelar painéis (worksheet.freeze_panes(1, 0)) # Congela a primeira linha
+    # Aplicar formato às colunas (exceto Dia e Hora que terão formato centralizado)
+    worksheet.write(row_num + 1, 2, df.iloc[row_num, 2], chosen_format) # Atividade
+    worksheet.write(row_num + 1, 3, df.iloc[row_num, 3], chosen_format) # Observações
 
-# --- Fim da Formatação ---
+    # Formato centralizado para Dia e Hora
+    worksheet.write(row_num + 1, 0, df.iloc[row_num, 0], cell_format_dia_hora) # Dia
+    worksheet.write(row_num + 1, 1, df.iloc[row_num, 1], cell_format_dia_hora) # Horário
 
-# Fechar o Pandas Excel writer e gerar o arquivo Excel.
-writer.close() # Antes era save(), mas close() é recomendado para XlsxWriter
+# --- Ajustar Largura das Colunas ---
+worksheet.set_column('A:A', 18) # Dia
+worksheet.set_column('B:B', 15) # Horário
+worksheet.set_column('C:C', 40) # Atividade
+worksheet.set_column('D:D', 50) # Observações
 
-print(f"Arquivo Excel formatado '{excel_filename}' criado com sucesso!")
+# --- Mesclar Células da Coluna 'Dia' ---
+merge_start_row = 1 # Linha inicial dos dados (abaixo do cabeçalho)
+for i in range(1, len(df)):
+    if df.iloc[i, 0] == df.iloc[i-1, 0]: # Se o dia atual é igual ao anterior
+        # Se chegou ao fim da sequencia igual ou o proximo é diferente
+        if i == len(df) - 1 or df.iloc[i+1, 0] != df.iloc[i, 0]:
+            # Mescla da linha inicial da sequencia até a linha atual 'i'
+            worksheet.merge_range(merge_start_row, 0, i + 1, 0, df.iloc[i, 0], cell_format_dia_hora)
+            merge_start_row = i + 2 # Próxima linha será o início da nova sequencia
+    else:
+        # Se o dia anterior era único (ou fim de uma sequência curta)
+        if merge_start_row == i + 1: # Verifica se precisa mesclar apenas a linha anterior
+             worksheet.write(i, 0, df.iloc[i-1, 0], cell_format_dia_hora) # Reescreve com formato correto se não mesclou
+        merge_start_row = i + 1 # Começa nova sequencia
+# Trata caso da última linha ser única
+if merge_start_row == len(df) + 1:
+    worksheet.write(len(df), 0, df.iloc[len(df)-1, 0], cell_format_dia_hora)
+
+
+# --- Congelar Painel Superior ---
+worksheet.freeze_panes(1, 0) # Congela a linha 1 (cabeçalho)
+
+# --- Fechar o Writer ---
+writer.close()
+
+print(f"Arquivo Excel super formatado '{excel_filename}' criado com sucesso!")
