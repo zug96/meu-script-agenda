@@ -1,7 +1,20 @@
 import pandas as pd
 import numpy as np # Necessário para verificar NaNs ao mesclar
 
-# Dados da agenda (mesmos dados)
+# Carregar dados do arquivo CSV
+try:
+    df = pd.read_csv('agenda_data.csv', encoding='utf-8')
+    # Tratar valores NaN (células vazias) como strings vazias, especialmente para Observacoes
+    df['Observacoes'] = df['Observacoes'].fillna('')
+except FileNotFoundError:
+    print("Erro: Arquivo 'agenda_data.csv' não encontrado.")
+    print("Certifique-se de que o arquivo está na mesma pasta que o script.")
+    exit() # Sai do script se o arquivo não for encontrado
+except Exception as e:
+    print(f"Erro ao ler o arquivo CSV: {e}")
+    exit()
+
+# Dados da agenda 
 data = [
     # Segunda-feira, 31/03
     {'Dia': 'Segunda (31/03)', 'Horário': '06:45 - 07:15', 'Atividade': 'Caminhada com pai/cachorras', 'Observações': 'Ajustada (30 min). Conversar com pai.'},
