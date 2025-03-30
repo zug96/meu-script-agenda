@@ -1,0 +1,5 @@
+# Arquivos Excel gerados
+*.xlsx
+
+# Arquivos temporários do Excel
+~$*.xlsx
