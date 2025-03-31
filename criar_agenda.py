@@ -3,7 +3,9 @@ import pandas as pd
 import numpy as np
 import argparse
 import sys
-from datetime import datetime # <--- GARANTA QUE ESTE IMPORT ESTÁ AQUI NO TOPO
+from ics import Calendar, Event
+from datetime import datetime, timedelta, time # 'time' também é necessário
+import sys # Se não estiver global
 
 # --- Configurações --- (Manter igual)
 CSV_FILENAME = 'agenda_data.csv'
@@ -225,6 +227,88 @@ def escrever_legenda(worksheet, workbook, formatos, num_data_rows):
 
     print("Legenda de cores escrita.")
 
+# Garanta que estes imports estão no topo do arquivo:
+from ics import Calendar, Event
+from datetime import datetime, timedelta, time # 'time' também é necessário
+import sys # Se não estiver global
+
+def gerar_ics(df, ics_filename="agenda.ics"):
+    """Gera um arquivo .ics a partir do DataFrame da agenda (VERSÃO CORRIGIDA NOVAMENTE)."""
+    print(f"Gerando arquivo de calendário '{ics_filename}'...")
+    c = Calendar()
+    year = 2025 # Ano base
+
+    for index, row in df.iterrows():
+        e = Event()
+        e.name = row['Atividade']
+        # Usar .get() para evitar erro se a coluna não existir ou for NaN/None
+        e.description = str(row.get('Observacoes', '')) # Converte para string por segurança
+
+        try:
+            # Tenta extrair dia e mês do formato "Texto (dd/mm)"
+            dia_str_completo = str(row.get('Dia', '')) # Pega o valor como string
+            if '(' in dia_str_completo and '/' in dia_str_completo and ')' in dia_str_completo:
+                date_part_str = dia_str_completo.split('(')[1].split(')')[0] # Pega "dd/mm"
+                day_str, month_str = date_part_str.split('/')       # Pega "dd" e "mm"
+                day = int(day_str)
+                month = int(month_str) # Converte mês para inteiro
+            else:
+                # Se formato for inesperado, pula este evento ou usa data padrão?
+                # Vamos pular por enquanto, gerando o aviso.
+                raise ValueError(f"Formato de 'Dia' inesperado: {dia_str_completo}")
+
+            # Tenta usar o objeto time pré-parseado da coluna 'StartTimeObject'
+            start_time_obj = row.get('StartTimeObject')
+
+            # Verifica se start_time_obj é realmente um objeto time
+            if isinstance(start_time_obj, time):
+                # Cria datetime de início usando ANO, MÊS e DIA extraídos
+                begin_dt = datetime(year, month, day, start_time_obj.hour, start_time_obj.minute)
+                e.begin = begin_dt # Naive datetime por enquanto
+
+                # Lógica para fim ou duração (igual anterior)
+                try:
+                    horario_str_completo = str(row.get('Horario', ''))
+                    if '-' in horario_str_completo:
+                        end_str = horario_str_completo.split('-')[1].strip()
+                        end_time_obj = datetime.strptime(end_str, '%H:%M').time()
+                        end_dt = datetime(year, month, day, end_time_obj.hour, end_time_obj.minute)
+                        # Simples verificação se passa da meia-noite
+                        if end_dt <= begin_dt:
+                            end_dt += timedelta(days=1)
+                        e.end = end_dt
+                    else:
+                        # Se não tem '-', assume duração padrão
+                        e.duration = timedelta(hours=1)
+                except:
+                    # Se qualquer erro no parse do fim, assume duração padrão
+                    e.duration = timedelta(hours=1)
+
+            else:
+                # Evento do dia inteiro usando ANO, MÊS e DIA extraídos
+                date_obj = datetime(year, month, day).date()
+                e.begin = date_obj
+                e.make_all_day()
+
+            c.events.add(e)
+
+        # Captura erros durante o parsing ou criação da data/evento
+        except (ValueError, IndexError, TypeError, AttributeError) as parse_error:
+            # A mensagem original do erro (ex: "day is out of range...") já vem em parse_error
+            print(f"  Aviso: Não foi possível processar evento para .ics na linha {index+1}: {row.get('Atividade','N/A')} ({parse_error})")
+        except Exception as general_error:
+             print(f"  Erro inesperado ao processar linha {index+1} para .ics: {general_error}")
+
+
+    # Escreve no arquivo .ics
+    try:
+        with open(ics_filename, 'w', encoding='utf-8') as f:
+            # Usar serialize_iter() é melhor para memória com muitos eventos
+            f.writelines(c.serialize_iter())
+        print("Arquivo .ics gerado com sucesso.")
+    except Exception as write_error:
+        print(f"  Erro ao escrever arquivo .ics: {write_error}")
+
 def main():
     """Função principal que orquestra a criação da planilha."""
     print("--- Iniciando Geração da Agenda ---")
@@ -293,6 +377,11 @@ def main():
     except Exception as e:
         print(f"Ocorreu um erro inesperado durante a escrita do Excel: {e}")
         sys.exit(1)
+
+   # --- Gerar ICS ---
+    gerar_ics(df_agenda, "minha_agenda.ics") # Chama a nova função
+
+    print(f"--- Geração da Agenda Concluída ---")
 
 # --- Ponto de Entrada --- (Manter if __name__ == "__main__": ...)
 # Lembre-se de ter os imports necessários (pandas, sys, argparse, etc.)
