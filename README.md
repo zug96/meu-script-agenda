@@ -12,7 +12,8 @@ Este projeto foi desenvolvido com dois objetivos principais:
 * Criar uma ferramenta personalizada para organizar e visualizar a agenda semanal de forma prática.
 * Aplicar e aprofundar conhecimentos em Python, manipulação de dados, Git, GitHub e o fluxo de trabalho de desenvolvimento, como parte do aprendizado contínuo e especificamente para o Desafio de Projeto "Contribuindo em um Projeto Open Source no GitHub" do Santander Bootcamp em parceria com a DIO.
 
-Nota sobre o Desenvolvimento: Este projeto foi desenvolvido em um processo interativo e colaborativo com a Inteligência Artificial Gemini (Modelo Experimental do Google). Como iniciante nos tópicos abordados, utilizei a IA como ferramenta de aprendizado para obter explicações, gerar exemplos de código, refatorar estruturas e depurar erros, enquanto realizava a implementação, teste e gerenciamento de versão.
+##Nota sobre o Desenvolvimento: 
+Este projeto foi desenvolvido em um processo interativo e colaborativo com a Inteligência Artificial Gemini (Modelo Experimental do Google). Como iniciante nos tópicos abordados, utilizei a IA como ferramenta de aprendizado para obter explicações, gerar exemplos de código, refatorar estruturas e depurar erros, enquanto realizava a implementação, teste e gerenciamento de versão.
 
 ## Funcionalidades
 
