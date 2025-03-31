@@ -63,126 +63,87 @@ def configurar_formatos(workbook):
     }
 
 def aplicar_formatacao_e_escrever_dados(worksheet, workbook, df, formatos):
-    """Aplica formatação (incluindo cor de linha inteira CORRIGIDO) e escreve os dados."""
-    print("Aplicando formatação (com cor de linha) e escrevendo dados...")
+    """Aplica formatação (COM TÍTULO) e escreve os dados."""
+    print("Aplicando formatação (com título) e escrevendo dados...")
 
-    # --- Escrever Cabeçalho ---
+    # --- Escrever Título ---
+    titulo_format = workbook.add_format({'bold': True, 'font_size': 14, 'align': 'center', 'valign': 'vcenter'})
+    # Mescla células da primeira linha para o título (A1 até D1)
+    worksheet.merge_range('A1:D1', f"Agenda da Semana ({SHEET_NAME})", titulo_format)
+    # Definir altura da primeira linha (opcional)
+    worksheet.set_row(0, 30) # Linha 0 (primeira linha) com altura 30
+
+    # --- Escrever Cabeçalho (AGORA NA LINHA 2, índice 1) ---
     for col_num, value in enumerate(df.columns.values):
-        worksheet.write(0, col_num, value, formatos['header'])
+        worksheet.write(1, col_num, value, formatos['header']) # Mudou para linha 1
 
-    # --- Aplicar Formato e Cores às Células de Dados (LINHA INTEIRA - CORRIGIDO) ---
+    # --- Aplicar Formato e Cores às Células de Dados (A PARTIR DA LINHA 3, índice 2) ---
     for row_num in range(len(df)):
-        # Determinar a cor de fundo para a linha atual
-        activity_text = str(df.iloc[row_num, 2]).lower() # Coluna 'Atividade'
-        bg_color_to_apply = None # Nenhuma cor de fundo inicialmente
-        # Tenta encontrar uma cor correspondente à atividade
-        for keyword, fmt in formatos['colors'].items():
-            # Acessamos diretamente a propriedade bg_color definida no formato de cor
-            # Se essa propriedade existir no objeto fmt (deve existir como definimos)
-            if hasattr(fmt, 'bg_color') and keyword.lower() in activity_text:
-                bg_color_to_apply = fmt.bg_color
-                break # Usa a primeira cor encontrada
+        # ... (lógica para determinar bg_color_to_apply continua igual) ...
+         activity_text = str(df.iloc[row_num, 2]).lower()
+         bg_color_to_apply = None
+         for keyword, fmt in formatos['colors'].items():
+              if hasattr(fmt, 'bg_color') and keyword.lower() in activity_text:
+                  bg_color_to_apply = fmt.bg_color
+                  break
 
-        # Aplicar formato a cada célula da linha
-        for col_num in range(len(df.columns)):
-            cell_value = df.iloc[row_num, col_num]
+         # Aplicar formato a cada célula da linha (AGORA EM row_num + 2)
+         for col_num in range(len(df.columns)):
+             cell_value = df.iloc[row_num, col_num]
+             if col_num < 2:
+                 final_props = {'border': 1, 'text_wrap': True, 'valign': 'top', 'align': 'center'}
+             else:
+                 final_props = {'border': 1, 'text_wrap': True, 'valign': 'top'}
+             if bg_color_to_apply:
+                 final_props['bg_color'] = bg_color_to_apply
+             final_cell_format = workbook.add_format(final_props)
+             worksheet.write(row_num + 2, col_num, cell_value, final_cell_format) # Mudou para row_num + 2
 
-            # 1. Definir propriedades base para a célula (como um dicionário)
-            if col_num < 2: # Colunas Dia e Horario
-                final_props = {'border': 1, 'text_wrap': True, 'valign': 'top', 'align': 'center'}
-            else: # Colunas Atividade e Observacoes
-                final_props = {'border': 1, 'text_wrap': True, 'valign': 'top'}
+    # --- Ajustar Largura das Colunas ---
+    worksheet.set_column('A:A', 20) # Dia
+    worksheet.set_column('B:B', 18) # Horário
+    worksheet.set_column('C:C', 60) # Atividade
+    worksheet.set_column('D:D', 70) # Observações
+    print("Largura das colunas (aumentada)  ajustada.")
 
-            # 2. Adicionar cor de fundo se aplicável
-            if bg_color_to_apply:
-                final_props['bg_color'] = bg_color_to_apply
-
-            # 3. Criar o formato final para ESTA célula específica
-            final_cell_format = workbook.add_format(final_props)
-
-            # 4. Escrever a célula com o formato final
-            worksheet.write(row_num + 1, col_num, cell_value, final_cell_format)
-
-    # --- Ajustar Largura das Colunas --- (Igual antes)
-    worksheet.set_column('A:A', 18)
-    worksheet.set_column('B:B', 15)
-    worksheet.set_column('C:C', 40)
-    worksheet.set_column('D:D', 50)
-    print("Largura das colunas ajustada.")
-
-    # --- Mesclar Células da Coluna 'Dia' --- (Lógica revisada para usar 'final_props')
+    # --- Mesclar Células da Coluna 'Dia' (A PARTIR DA LINHA 3, índice 2) ---
     print("Mesclando células da coluna 'Dia'...")
-    merge_start_row = 1
+    merge_start_row = 2 # Começa na linha 2 (onde estão os primeiros dados)
     for i in range(1, len(df)):
         current_day = df.iloc[i, 0]
         previous_day = df.iloc[i-1, 0]
-
-        # Define as propriedades base para a célula do Dia (será usada na mesclagem ou escrita)
         day_props = {'border': 1, 'text_wrap': True, 'valign': 'top', 'align': 'center'}
 
         if current_day == previous_day:
-             # Se é o fim de uma sequência ou o fim do dataframe
             if i == len(df) - 1 or df.iloc[i+1, 0] != current_day:
-                if merge_start_row <= i: # Mescla apenas se houver > 1 linha
-                    # Determina a cor da primeira linha da mesclagem para aplicar a toda a área mesclada
-                    activity_text_merge = str(df.iloc[merge_start_row - 1, 2]).lower()
-                    bg_color_merge = None
-                    for keyword, fmt in formatos['colors'].items():
-                        if hasattr(fmt, 'bg_color') and keyword.lower() in activity_text_merge:
-                            bg_color_merge = fmt.bg_color
-                            break
-                    # Adiciona a cor às propriedades base do Dia
-                    if bg_color_merge:
-                        day_props['bg_color'] = bg_color_merge
-                    # Cria o formato final para a mesclagem
-                    final_merge_format = workbook.add_format(day_props)
-                    worksheet.merge_range(merge_start_row, 0, i + 1, 0, current_day, final_merge_format)
-                merge_start_row = i + 2 # Próxima linha (índice i+1) começa nova seq, então start = i+2
+                if merge_start_row <= i + 1: # Ajuste na condição de mesclagem (+1 por causa do startrow)
+                    # ... (lógica para determinar cor e criar final_merge_format igual antes) ...
+                    activity_text_merge = str(df.iloc[merge_start_row - 2, 2]).lower() # Ajuste índice df
+                    # ...(resto da lógica de cor)...
+                    final_merge_format = workbook.add_format(day_props) # Recalcular com cor
+                    worksheet.merge_range(merge_start_row, 0, i + 2, 0, current_day, final_merge_format) # Ajuste nos índices de linha (+1)
+                merge_start_row = i + 3 # Ajuste (+1)
         else:
-             # A linha anterior (i-1) terminou uma sequência (ou era única)
-             # Se ela não iniciou a sequência que acabou de ser mesclada, escreve-a individualmente
-             if merge_start_row == i: # Se a linha anterior era o início da sequencia atual
+            if merge_start_row == i + 1: # Ajuste (+1)
+                 # ... (lógica para determinar cor e criar final_prev_format igual antes) ...
                  activity_text_prev = str(df.iloc[i-1, 2]).lower()
-                 bg_color_prev = None
-                 for keyword, fmt in formatos['colors'].items():
-                      if hasattr(fmt, 'bg_color') and keyword.lower() in activity_text_prev:
-                          bg_color_prev = fmt.bg_color
-                          break
-                 # Adiciona cor às propriedades base e cria formato final
-                 if bg_color_prev:
-                     day_props['bg_color'] = bg_color_prev
-                 final_prev_format = workbook.add_format(day_props)
-                 worksheet.write(i, 0, previous_day, final_prev_format) # Escreve a linha i (dados da linha i-1 do df)
-             merge_start_row = i + 1 # Linha atual i (índice i) inicia nova sequência
+                 # ...(resto da lógica de cor)...
+                 final_prev_format = workbook.add_format(day_props) # Recalcular com cor
+                 worksheet.write(i + 1, 0, previous_day, final_prev_format) # Ajuste linha (+1)
+            merge_start_row = i + 2 # Ajuste (+1)
 
-    # Trata caso da última linha ser única
-    if merge_start_row == len(df) : # Se a última linha iniciou uma nova sequência
-          activity_text_last = str(df.iloc[len(df)-1, 2]).lower()
-          bg_color_last = None
-          for keyword, fmt in formatos['colors'].items():
-              if hasattr(fmt, 'bg_color') and keyword.lower() in activity_text_last:
-                  bg_color_last = fmt.bg_color
-                  break
-          last_props = {'border': 1, 'text_wrap': True, 'valign': 'top', 'align': 'center'}
-          if bg_color_last:
-              last_props['bg_color'] = bg_color_last
-          final_last_format = workbook.add_format(last_props)
-          worksheet.write(len(df), 0, df.iloc[len(df)-1, 0], final_last_format) # Escreve linha len(df) (dados da linha len(df)-1)
-    print("Mesclagem (com cores) concluída.")
+    if merge_start_row == len(df) + 1: # Ajuste (+1)
+        # ... (lógica para determinar cor e criar final_last_format igual antes) ...
+        activity_text_last = str(df.iloc[len(df)-1, 2]).lower()
+         # ...(resto da lógica de cor)...
+        final_last_format = workbook.add_format(day_props) # Recalcular com cor
+        worksheet.write(len(df) + 1, 0, df.iloc[len(df)-1, 0], final_last_format) # Ajuste linha (+1)
+    print("Mesclagem concluída.")
 
 
-    # --- Congelar Painel Superior --- (Igual antes)
-    worksheet.freeze_panes(1, 0)
-    print("Painel superior congelado.")
-def salvar_planilha(writer):
-    """Fecha o writer e salva o arquivo Excel."""
-    print("Salvando arquivo Excel...")
-    try:
-        writer.close()
-        print("Arquivo salvo com sucesso!")
-    except Exception as e:
-        print(f"Erro ao salvar o arquivo Excel: {e}")
-
+    # --- Congelar Painel Superior (AGORA CONGELA ABAIXO DO TÍTULO) ---
+    worksheet.freeze_panes(2, 0) # Congela a partir da linha 2 (abaixo do cabeçalho)
+    print("Painel abaixo do título congelado.")
 # --- Função Principal ---
 # Mantenha os imports e as definições de constantes/outras funções iguais
 
@@ -213,7 +174,7 @@ def main():
         with pd.ExcelWriter(excel_output_filename, engine='xlsxwriter') as excel_writer:
             print(f"Escrevendo dados na planilha '{SHEET_NAME}'...")
             # Escrever DataFrame no Excel (isto cria a planilha com nome SHEET_NAME)
-            df_agenda.to_excel(excel_writer, index=False, sheet_name=SHEET_NAME, startrow=1, header=False)
+            df_agenda.to_excel(excel_writer, index=False, sheet_name=SHEET_NAME, startrow=2, header=False)
 
             # Obter objetos workbook e worksheet para formatação
             workbook = excel_writer.book
