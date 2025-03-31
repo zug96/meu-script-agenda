@@ -2,24 +2,24 @@
 import pandas as pd
 import numpy as np
 import argparse
-import sys # Importar sys se ainda não estiver globalmente main()
-import sys # Para usar sys.exit()
+import sys
+from datetime import datetime # <--- GARANTA QUE ESTE IMPORT ESTÁ AQUI NO TOPO
 
-# --- Configurações ---
+# --- Configurações --- (Manter igual)
 CSV_FILENAME = 'agenda_data.csv'
 SHEET_NAME = 'AgendaSemanal'
 
 # --- Funções ---
 
+# CORRIGIDA: Função carregar_dados com parse de datetime
 def carregar_dados(csv_path):
-    """Carrega os dados da agenda a partir de um arquivo CSV."""
+    """Carrega os dados da agenda a partir de um arquivo CSV e tenta parsear horário."""
     print(f"Carregando dados de '{csv_path}'...")
     try:
         df = pd.read_csv(csv_path, encoding='utf-8')
-        # Tratar valores NaN (células vazias) como strings vazias
+        # Tratar valores NaN (células vazias) como strings vazias ANTES do loop
         df = df.fillna('')
         print("Dados carregados com sucesso.")
-        return df
     except FileNotFoundError:
         print(f"Erro Crítico: Arquivo '{csv_path}' não encontrado.")
         print("Certifique-se de que o arquivo está na mesma pasta que o script.")
@@ -28,6 +28,32 @@ def carregar_dados(csv_path):
         print(f"Erro Crítico ao ler o arquivo CSV: {e}")
         sys.exit(1)
 
+    # Tentar parsear o horário de início
+    print("Tentando parsear horários de início...")
+    start_times = []
+    # Loop para processar cada horário no DataFrame
+    for horario_str in df['Horario']:
+        # --- Bloco try...except CORRETAMENTE INDENTADO ---
+        try:
+            # Tenta pegar a primeira parte 'hh:mm'
+            start_str = horario_str.split('-')[0].strip()
+            # Converte para um objeto time
+            time_obj = datetime.strptime(start_str, '%H:%M').time()
+            start_times.append(time_obj)
+        except (ValueError, AttributeError, IndexError):
+            # Se não for formato hh:mm - hh:mm, ou der erro, adiciona None
+            start_times.append(None)
+        # --- Fim do bloco try...except ---
+
+    # --- Linhas EXECUTADAS APÓS o loop for terminar ---
+    # Adiciona a nova coluna ao DataFrame (com indentação correta, fora do loop)
+    df['StartTimeObject'] = start_times
+    print("Tentativa de parse do horário de início concluída.")
+
+    # Retorna o DataFrame modificado (com indentação correta, fora do loop)
+    return df
+
+# --- Função configurar_formatos --- (Manter igual a versão anterior)
 def configurar_formatos(workbook):
     """Define e retorna um dicionário com os formatos de célula para o Excel."""
     print("Configurando formatos de célula...")
@@ -36,12 +62,11 @@ def configurar_formatos(workbook):
         'bold': True, 'text_wrap': True, 'valign': 'top',
         'fg_color': '#D7E4BC', 'border': 1, 'align': 'center'
     })
-
     # Formatos de Célula Base
     cell_format_base = workbook.add_format({'border': 1, 'text_wrap': True, 'valign': 'top'})
     cell_format_dia_hora = workbook.add_format({'border': 1, 'text_wrap': True, 'valign': 'top', 'align': 'center'})
 
-    # Formatos de Cores por Atividade (ajuste cores/palavras-chave conforme necessário)
+    # Formatos de Cores por Atividade
     color_formats = {
         'Estudo Linux': workbook.add_format({'bg_color': '#FFFFCC', 'border': 1, 'text_wrap': True, 'valign': 'top'}),
         'AULA PEDAGOGIA': workbook.add_format({'bg_color': '#CCFFFF', 'border': 1, 'text_wrap': True, 'valign': 'top'}),
@@ -52,7 +77,6 @@ def configurar_formatos(workbook):
         'Flexível': workbook.add_format({'bg_color': '#E0E0E0', 'border': 1, 'text_wrap': True, 'valign': 'top'}),
         'Tempo Livre': workbook.add_format({'bg_color': '#F0F0F0', 'border': 1, 'text_wrap': True, 'valign': 'top'}),
         'Descanso': workbook.add_format({'bg_color': '#F0F0F0', 'border': 1, 'text_wrap': True, 'valign': 'top'}),
-        # Adicione mais categorias/cores se precisar
     }
     print("Formatos definidos.")
     return {
@@ -140,12 +164,66 @@ def aplicar_formatacao_e_escrever_dados(worksheet, workbook, df, formatos):
         worksheet.write(len(df) + 1, 0, df.iloc[len(df)-1, 0], final_last_format) # Ajuste linha (+1)
     print("Mesclagem concluída.")
 
-
     # --- Congelar Painel Superior (AGORA CONGELA ABAIXO DO TÍTULO) ---
     worksheet.freeze_panes(2, 0) # Congela a partir da linha 2 (abaixo do cabeçalho)
     print("Painel abaixo do título congelado.")
 # --- Função Principal ---
 # Mantenha os imports e as definições de constantes/outras funções iguais
+
+# --- Nova Função para Legenda ---
+def escrever_legenda(worksheet, workbook, formatos, num_data_rows):
+    """Escreve a legenda de cores abaixo dos dados da agenda."""
+    print("Escrevendo legenda de cores...")
+    # Determina a linha inicial para a legenda
+    # Linha 0: Título; Linha 1: Cabeçalho; Linhas 2 a (num_data_rows + 1): Dados.
+    # Última linha de dados tem índice num_data_rows + 1.
+    # Deixaremos uma linha em branco (índice num_data_rows + 2).
+    legend_start_row = num_data_rows + 3 # Legenda começa na linha com índice num_data_rows + 3
+
+    # Formato para o título da legenda
+    legend_title_format = workbook.add_format({'bold': True, 'font_size': 10})
+    # Formato para o texto da legenda (alinhado ao topo se a célula for alta)
+    legend_text_format = workbook.add_format({'valign': 'top'})
+
+    # Escrever título da legenda (mesclado em 2 colunas, A e B)
+    try:
+         worksheet.merge_range(legend_start_row, 0, legend_start_row, 1, "Legenda de Cores:", legend_title_format)
+    except Exception as merge_err:
+         print(f"  Aviso: Não foi possível mesclar células para título da legenda - {merge_err}")
+         worksheet.write(legend_start_row, 0, "Legenda de Cores:", legend_title_format)
+
+
+    current_row = legend_start_row + 1
+    processed_colors = {} # Dicionário para agrupar keywords pela cor
+
+    # Ajustar largura das colunas específicas da legenda
+    worksheet.set_column(1, 1, 35) # Coluna B (descrição) mais larga que antes
+
+    # Agrupar keywords por cor para evitar repetição na legenda
+    for keyword, fmt in formatos['colors'].items():
+        if hasattr(fmt, 'bg_color'):
+            color_hex = fmt.bg_color # Pega a cor definida no formato
+            if color_hex not in processed_colors:
+                processed_colors[color_hex] = {'format': fmt, 'keywords': []}
+            processed_colors[color_hex]['keywords'].append(keyword)
+
+    # Escrever cada item da legenda (cor + descrição agrupada)
+    for color_hex, data in processed_colors.items():
+        color_format_for_swatch = data['format']
+        # Junta as keywords que usam a mesma cor
+        description = " / ".join(data['keywords'])
+
+        try:
+            # Escreve uma célula em branco APENAS com a cor de fundo
+            worksheet.write_blank(current_row, 0, None, color_format_for_swatch)
+            # Escreve a descrição na coluna ao lado
+            worksheet.write(current_row, 1, description, legend_text_format)
+            current_row += 1
+        except Exception as write_err:
+             print(f"  Erro ao escrever linha da legenda para {description}: {write_err}")
+
+
+    print("Legenda de cores escrita.")
 
 def main():
     """Função principal que orquestra a criação da planilha."""
@@ -198,6 +276,8 @@ def main():
             # Aplicar formatação e escrever os dados formatados
             aplicar_formatacao_e_escrever_dados(worksheet, workbook, df_agenda, formatos)
 
+            escrever_legenda(worksheet, workbook, formatos, len(df_agenda))
+
             # O 'with' cuida do save/close automaticamente ao sair do bloco
             print("Arquivo Excel sendo finalizado...")
 
@@ -214,10 +294,13 @@ def main():
         print(f"Ocorreu um erro inesperado durante a escrita do Excel: {e}")
         sys.exit(1)
 
-# --- Ponto de Entrada do Script ---
+# --- Ponto de Entrada --- (Manter if __name__ == "__main__": ...)
+# Lembre-se de ter os imports necessários (pandas, sys, argparse, etc.)
 if __name__ == "__main__":
-    # Imports necessários AQUI DENTRO se não estiverem no topo global
-    import argparse
+    import pandas as pd
+    import numpy as np
     import sys
-    # Chama a função principal para iniciar o processo
-    main()   
+    import argparse
+    from datetime import datetime, timedelta # Se já estiver usando datetime
+    from ics import Calendar, Event # Se já estiver usando ics
+    main()
