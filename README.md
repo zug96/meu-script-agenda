@@ -1,21 +1,25 @@
-# Projeto Agenda Semanal em Excel e ICS
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Python 3](https://img.shields.io/badge/python-3-blue.svg)](https://www.python.org/downloads/)
 
-## Descrição Curta
+# 🗓️ Projeto Agenda Semanal em Excel e ICS
+
+## 📝 Descrição Curta
 
 Este projeto consiste em um script Python que lê uma agenda semanal a partir de um arquivo CSV e gera automaticamente dois arquivos de saída:
 1.  Uma planilha Excel (`.xlsx`) bem formatada, com cores, mesclagem de células e legenda.
-2.  Um arquivo de calendário (`.ics`) que pode ser importado em aplicativos como Google Agenda, Outlook Calendar, etc., com nome de arquivo configurável.
+2.  Um arquivo de calendário (`.ics`) que pode ser importado facilmente em aplicativos como Google Agenda, Outlook Calendar, etc., com nome de arquivo configurável.
 
-## Motivação
+## 🎯 Motivação
 
 Este projeto foi desenvolvido com dois objetivos principais:
-* Criar uma ferramenta personalizada para organizar e visualizar a agenda semanal de forma prática, integrando compromissos de trabalho, estudo e vida pessoal.
+* Criar uma ferramenta personalizada para organizar e visualizar a agenda semanal de forma prática, integrando compromissos de trabalho, estudo (incluindo prazos e leituras) e vida pessoal.
 * Aplicar e aprofundar conhecimentos em Python, manipulação de dados, Git, GitHub e o fluxo de trabalho de desenvolvimento, como parte do aprendizado contínuo e especificamente para o Desafio de Projeto "Contribuindo em um Projeto Open Source no GitHub" do Santander Bootcamp em parceria com a DIO.
 
-## Nota sobre o Desenvolvimento:
+## 💡 Nota sobre o Desenvolvimento:
 Este projeto foi desenvolvido em um processo interativo e colaborativo com a Inteligência Artificial Gemini (Modelo Experimental do Google). Como iniciante nos tópicos abordados, utilizei a IA como ferramenta de aprendizado para obter explicações, gerar exemplos de código, refatorar estruturas e depurar erros, enquanto realizava a implementação, teste e gerenciamento de versão.
 
-## Funcionalidades
+---
+
+## 🚀 Funcionalidades
 
 * Leitura da agenda a partir de um arquivo `.csv` customizável (ex: `agenda_data.csv`, `agenda_google_abril.csv`).
 * Geração de planilha Excel (`.xlsx`) com formatação avançada:
@@ -27,7 +31,7 @@ Este projeto foi desenvolvido em um processo interativo e colaborativo com a Int
     * Linha de título na planilha.
     * Legenda de cores explicativa no final da planilha.
     * Painel de cabeçalho congelado.
-* Geração de arquivo de calendário `.ics` compatível com diversos aplicativos:
+* Geração de arquivo de calendário `.ics` compatível com diversos aplicativos (ótimo para Google Agenda):
     * Converte horários definidos (`HH:MM - HH:MM`) em eventos com início e fim.
     * Trata entradas sem horário específico (ex: "Manhã") como eventos de dia inteiro.
     * Inclui título (Atividade) e descrição (Observacoes) do evento.
@@ -38,7 +42,15 @@ Este projeto foi desenvolvido em um processo interativo e colaborativo com a Int
 * Uso de ambiente virtual (`venv`) recomendado para gerenciamento de dependências.
 * Uso de `.gitignore` para manter o repositório limpo (ignorando `.venv`, etc.).
 
-## Tecnologias Utilizadas
+### Exemplo de Saída Excel:
+
+*(**Instrução:** Tire um screenshot da sua planilha `agenda_semana_formatada.xlsx`, salve a imagem na pasta `MeusScripts` com um nome como `exemplo_excel.png`, faça o commit e push da imagem, e então substitua `URL_DA_IMAGEM_AQUI.png` abaixo pelo nome do arquivo da imagem)*
+
+`![Exemplo da Planilha Excel Gerada](URL_DA_IMAGEM_AQUI.png)`
+
+---
+
+## 💻 Tecnologias Utilizadas
 
 * **Linguagem:** Python 3
 * **Bibliotecas Principais:**
@@ -52,13 +64,15 @@ Este projeto foi desenvolvido em um processo interativo e colaborativo com a Int
 * **Controle de Versão:** Git
 * **Plataforma:** GitHub
 
-## Como Usar
+---
+
+## ⚙️ Como Usar
 
 ### Pré-requisitos
 
-* Python 3 instalado (disponível em [python.org](https://python.org/))
-* Pip (gerenciador de pacotes do Python, geralmente vem junto com a instalação)
-* Git instalado (disponível em [git-scm.com](https://git-scm.com/))
+* Python 3 instalado ([python.org](https://python.org/))
+* Pip (geralmente vem com Python)
+* Git instalado ([git-scm.com](https://git-scm.com/))
 
 ### Instalação
 
@@ -136,15 +150,24 @@ Se você estiver executando este script dentro de uma máquina virtual Linux (co
 
 Lembre-se de obter o endereço IP da sua VM (geralmente com o comando `ip addr show` dentro da VM) para usar os métodos SFTP ou `scp`.
 
-## Solução de Problemas Comuns
+---
+
+## 🤔 Solução de Problemas Comuns
+
+<details>
+<summary>➡️ Clique para ver Soluções de Problemas Comuns</summary>
 
 Durante a configuração e uso, alguns problemas podem surgir:
 
-* **Erro `externally-managed-environment` ao usar `pip install`:** Este erro em sistemas Linux recentes (Ubuntu/Debian) indica que você não deve instalar pacotes Python globalmente com `pip`. A solução é **sempre** usar um ambiente virtual. Crie-o com `python3 -m venv .venv` e ative-o com `source .venv/bin/activate` antes de instalar dependências ou rodar o script.
-* **Erro ao ler CSV (`Expected X fields... saw Y`):** Verifique o arquivo `.csv` na linha indicada pelo erro. Geralmente é causado por uma vírgula extra que cria colunas a mais, ou por texto na coluna `Observacoes` (ou outra) que contém uma vírgula mas **não** está entre aspas duplas (`"`). Corrija a formatação da linha para ter exatamente 4 colunas separadas por 3 vírgulas.
+* **Erro `externally-managed-environment` ao usar `pip install`:** Este erro em sistemas Linux recentes (Ubuntu/Debian) indica que você não deve instalar pacotes Python globalmente com `pip`. A solução é **sempre** usar um ambiente virtual. Crie-o com `python3 -m venv .venv` e ative-o com `source .venv/bin/activate` antes de instalar dependências ou rodar o script. Lembre-se de adicionar `.venv/` ao seu `.gitignore`.
+* **Erro ao ler CSV (`Expected X fields... saw Y`):** Verifique o arquivo `.csv` na linha indicada pelo erro. Geralmente é causado por uma vírgula extra que cria colunas a mais, ou por texto na coluna `Observacoes` (ou outra) que contém uma vírgula mas **não** está entre aspas duplas (`"`). Corrija a formatação da linha para ter exatamente 4 colunas separadas por 3 vírgulas, usando aspas duplas para cercar qualquer campo que contenha vírgulas internas.
 * **Erro `Authentication failed` no `git push` via HTTPS:** O GitHub não aceita mais senhas para autenticação HTTPS. Mude a URL do seu repositório remoto para usar SSH: `git remote set-url origin git@github.com:<seu_usuario>/<seu_repo>.git` e certifique-se de ter configurado chaves SSH na sua conta GitHub e na sua máquina.
 
-## Jornada de Desenvolvimento (Resumo das Etapas)
+</details>
+
+---
+
+## 🗺️ Jornada de Desenvolvimento (Resumo das Etapas)
 
 Este projeto evoluiu bastante desde a ideia inicial! Passamos por diversas fases, gerenciadas com Git e GitHub:
 
@@ -158,7 +181,9 @@ Este projeto evoluiu bastante desde a ideia inicial! Passamos por diversas fases
 8.  **Argumento para Saída ICS (`feature/ics-argument` branch):** Adição do argumento `--ics` para permitir nomear o arquivo de calendário `.ics` gerado.
 9.  **Documentação (Este README):** Criação e atualização deste arquivo para documentar o projeto, incluindo notas sobre uso em VM e solução de problemas comuns.
 
-## Próximos Passos (Ideias Futuras)
+---
+
+## ✨ Próximos Passos (Ideias Futuras)
 
 * Implementar lógica para eventos recorrentes no `.ics`.
 * Tratamento mais robusto de datas que cruzam o ano no `.ics`.
@@ -166,10 +191,14 @@ Este projeto evoluiu bastante desde a ideia inicial! Passamos por diversas fases
 * Adicionar testes automatizados.
 * Permitir configuração de cores/formatos do Excel via arquivo externo.
 
-## Autor
+---
+
+## 👤 Autor
 
 * Gustavo Correa Campana - https://github.com/zug96/
 
-## Licença
+---
+
+## ⚖️ Licença
 
 Este projeto está licenciado sob a Licença MIT - veja o arquivo LICENSE.md para detalhes.
