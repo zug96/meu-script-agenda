@@ -2,4 +2,4 @@
 *.xlsx
 
 # Arquivos temporários do Excel
-~$*.xlsx
+~$*.xlsx.venv/

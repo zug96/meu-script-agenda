@@ -327,11 +327,15 @@ def main():
     parser.add_argument('-c', '--csv',
                         default='agenda_data.csv', # Nome padrão do CSV
                         help='Nome do arquivo CSV de entrada (ex: dados.csv)')
+    parser.add_argument ('--ics', 
+                        default='minha_agenda.ics',
+                        help='Nome do arquivo ICS de saída (ex: calendario.ics)')
     args = parser.parse_args()
 
     # Usa os nomes de arquivo dos argumentos
     csv_input_filename = args.csv
     excel_output_filename = args.output
+    ics_output_filename = args.ics
     # --------------------------------
 
     # Carregar dados
@@ -385,7 +389,8 @@ def main():
         sys.exit(1)
 
    # --- Gerar ICS ---
-    gerar_ics(df_agenda, "minha_agenda.ics") # Chama a nova função
+    print(f"--- Iniciando Geração do ICS: '{ics_output_filename}' ---")
+    gerar_ics(df_agenda, ics_output_filename) # Chama a nova função
 
     print(f"--- Geração da Agenda Concluída ---")
 
