@@ -107,6 +107,9 @@ Este projeto foi desenvolvido em um processo interativo e colaborativo com a Int
     * `Observacoes`: Detalhes adicionais. **Importante:** Se o texto da observação contiver vírgulas, coloque todo o texto da observação **entre aspas duplas** (`"assim, com vírgula"`) para evitar erros na leitura do arquivo.
 3.  **Preencha os CSVs** com os dados da sua semana.
 
+**Nota:** Para instruções detalhadas sobre como adicionar dados de semanas ou meses futuros e gerar um novo calendário atualizado, consulte o [Guia Rápido de Atualização da Agenda](GUIA_ATUALIZACAO_AGENDA.md).
+
+
 ### Execução
 
 Execute o script Python (com o ambiente virtual ativo) através do seu terminal:
@@ -195,7 +198,7 @@ Este projeto evoluiu bastante desde a ideia inicial! Passamos por diversas fases
 
 ## 👤 Autor
 
-* Gustavo Correa Campana - https://github.com/zug96/
+* Gustavo Correa Campana - [Perfil no GitHub](https://github.com/zug96/)
 
 ---
 
