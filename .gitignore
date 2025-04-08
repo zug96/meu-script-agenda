@@ -3,3 +3,4 @@
 
 # Arquivos temporários do Excel
 ~$*.xlsx.venv/
+.ics
