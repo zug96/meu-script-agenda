@@ -4,3 +4,4 @@
 # Arquivos temporários do Excel
 ~$*.xlsx.venv/
 .ics
+credentials.json
