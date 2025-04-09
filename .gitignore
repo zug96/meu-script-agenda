@@ -4,6 +4,7 @@
 *.xlsx
 agenda_*.csv
 calendario_*.ics
+gerar_csv_base.py
 
 # Arquivos de Configuração Sensíveis
 credentials.json
