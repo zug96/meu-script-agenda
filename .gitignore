@@ -1,7 +1,18 @@
-# Arquivos Excel gerados
+# Arquivos de Dados e Saída da Agenda
+*.csv
+*.ics
 *.xlsx
+agenda_*.csv
+calendario_*.ics
 
-# Arquivos temporários do Excel
-~$*.xlsx.venv/
-.ics
+# Arquivos de Configuração Sensíveis
 credentials.json
+token.json
+
+# Ambiente Virtual
+.venv/
+
+# Outros arquivos do sistema/IDE (Exemplos)
+__pycache__/
+*.pyc
+.vscode/
