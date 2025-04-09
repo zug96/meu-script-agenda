@@ -12,3 +12,6 @@ TatSu==5.13.1
 types-python-dateutil==2.9.0.20241206
 tzdata==2025.2
 XlsxWriter==3.2.2
+google-api-python-client
+google-auth-oauthlib
+google-auth-httplib2
